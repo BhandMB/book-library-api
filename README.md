@@ -79,3 +79,4 @@ POST /api/v1/books
   "available": true
 }
 ```
+--------------

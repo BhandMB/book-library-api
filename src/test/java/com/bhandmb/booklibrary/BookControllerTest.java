@@ -69,4 +69,9 @@ class BookControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true));
     }
+    void searchBooks_returnResults() throws Exception{
+        mockMvc.perform(get("/api/v1/books/serach?query=clean"))
+            
+    }
 }
+

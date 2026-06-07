@@ -78,5 +78,3 @@ POST /api/v1/books
   "description": "A craftsman's guide to software structure and design.",
   "available": true
 }
-```
--------------------

@@ -5,6 +5,7 @@ A production-ready RESTful API for managing a book library, built with **Spring 
 ## 🚀 Features
 
 - Full **CRUD** for books
+- **Pagination and sorting** for the book collection endpoint
 - **Search** by title, author, or genre
 - Filter by **author**, **genre**, **availability**, or **minimum rating**
 - **Toggle availability** of a book
@@ -38,7 +39,7 @@ The API will start on **http://localhost:8080**
 
 | Method | Endpoint | Description |
 |---|---|---|
-| GET | `/api/v1/books` | Get all books |
+| GET | `/api/v1/books` | Get books with pagination and sorting |
 | GET | `/api/v1/books/{id}` | Get book by ID |
 | GET | `/api/v1/books/isbn/{isbn}` | Get book by ISBN |
 | POST | `/api/v1/books` | Create a new book |
@@ -50,6 +51,26 @@ The API will start on **http://localhost:8080**
 | GET | `/api/v1/books/available` | Get available books |
 | GET | `/api/v1/books/rating?minRating=` | Filter by rating |
 | PATCH | `/api/v1/books/{id}/toggle-availability` | Toggle availability |
+
+### Pagination and Sorting
+
+`GET /api/v1/books` supports the following query parameters:
+
+| Parameter | Default | Description |
+|---|---:|---|
+| `page` | `0` | Zero-based page number |
+| `size` | `10` | Number of books per page; maximum `100` |
+| `sort` | `id,asc` | Sort field and direction |
+
+Example:
+
+```text
+GET /api/v1/books?page=0&size=10&sort=title,asc
+```
+
+Supported sort fields are `id`, `title`, `author`, `publishedYear`, `genre`, `rating`, `createdAt`, and `updatedAt`.
+
+The response includes `content`, `page`, `size`, `totalElements`, `totalPages`, `first`, and `last` pagination metadata.
 
 ## 🔍 Useful URLs
 
@@ -78,3 +99,4 @@ POST /api/v1/books
   "description": "A craftsman's guide to software structure and design.",
   "available": true
 }
+```

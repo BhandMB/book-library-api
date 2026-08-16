@@ -2,11 +2,14 @@ package com.bhandmb.booklibrary.service;
 
 import com.bhandmb.booklibrary.dto.BookRequestDTO;
 import com.bhandmb.booklibrary.dto.BookResponseDTO;
+import com.bhandmb.booklibrary.dto.PageResponse;
 import com.bhandmb.booklibrary.exception.BookNotFoundException;
 import com.bhandmb.booklibrary.exception.DuplicateIsbnException;
 import com.bhandmb.booklibrary.model.Book;
 import com.bhandmb.booklibrary.repository.BookRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,10 +25,17 @@ public class BookServiceImpl implements BookService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<BookResponseDTO> getAllBooks() {
-        return bookRepository.findAll().stream()
-                .map(this::toDTO)
-                .collect(Collectors.toList());
+    public PageResponse<BookResponseDTO> getAllBooks(Pageable pageable) {
+        Page<Book> page = bookRepository.findAll(pageable);
+        return PageResponse.<BookResponseDTO>builder()
+                .content(page.getContent().stream().map(this::toDTO).collect(Collectors.toList()))
+                .page(page.getNumber())
+                .size(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .first(page.isFirst())
+                .last(page.isLast())
+                .build();
     }
 
     @Override
@@ -54,7 +64,6 @@ public class BookServiceImpl implements BookService {
     @Override
     public BookResponseDTO updateBook(Long id, BookRequestDTO request) {
         Book existing = findById(id);
-        // Only check ISBN uniqueness if it changed
         if (!existing.getIsbn().equals(request.getIsbn()) &&
                 bookRepository.existsByIsbn(request.getIsbn())) {
             throw new DuplicateIsbnException(request.getIsbn());
@@ -124,8 +133,6 @@ public class BookServiceImpl implements BookService {
         book.setAvailable(!book.getAvailable());
         return toDTO(bookRepository.save(book));
     }
-
-    // ---- helpers ----
 
     private Book findById(Long id) {
         return bookRepository.findById(id)

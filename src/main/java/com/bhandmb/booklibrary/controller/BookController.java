@@ -3,15 +3,21 @@ package com.bhandmb.booklibrary.controller;
 import com.bhandmb.booklibrary.dto.ApiResponse;
 import com.bhandmb.booklibrary.dto.BookRequestDTO;
 import com.bhandmb.booklibrary.dto.BookResponseDTO;
+import com.bhandmb.booklibrary.dto.PageResponse;
 import com.bhandmb.booklibrary.service.BookService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/v1/books")
@@ -19,13 +25,52 @@ import java.util.List;
 @Tag(name = "Books", description = "Book Library CRUD & search operations")
 public class BookController {
 
+    private static final Set<String> ALLOWED_SORT_FIELDS = Set.of(
+            "id", "title", "author", "publishedYear", "genre", "rating", "createdAt", "updatedAt");
+    private static final int DEFAULT_PAGE = 0;
+    private static final int DEFAULT_SIZE = 10;
+    private static final int MAX_SIZE = 100;
+
     private final BookService bookService;
 
     @GetMapping
-    @Operation(summary = "Get all books")
-    public ResponseEntity<ApiResponse<List<BookResponseDTO>>> getAllBooks() {
-        List<BookResponseDTO> books = bookService.getAllBooks();
-        return ResponseEntity.ok(ApiResponse.success(books, "Fetched " + books.size() + " books"));
+    @Operation(summary = "Get books with pagination and sorting")
+    public ResponseEntity<ApiResponse<PageResponse<BookResponseDTO>>> getAllBooks(
+            @Parameter(description = "Zero-based page number")
+            @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Number of books per page (1-100)")
+            @RequestParam(defaultValue = "10") int size,
+            @Parameter(description = "Sort field and direction, e.g. title,asc")
+            @RequestParam(defaultValue = "id,asc") String[] sort) {
+
+        if (page < 0) {
+            throw new IllegalArgumentException("Page must be >= 0");
+        }
+        if (size < 1 || size > MAX_SIZE) {
+            throw new IllegalArgumentException("Size must be between 1 and " + MAX_SIZE);
+        }
+
+        Sort sorting = Sort.by(parseSortOrders(sort));
+        Pageable pageable = PageRequest.of(page, size, sorting);
+        PageResponse<BookResponseDTO> books = bookService.getAllBooks(pageable);
+        return ResponseEntity.ok(ApiResponse.success(books, "Fetched " + books.getContent().size() + " books"));
+    }
+
+    private List<Sort.Order> parseSortOrders(String[] sort) {
+        return java.util.Arrays.stream(sort)
+                .map(value -> {
+                    String[] parts = value.split(",", 2);
+                    String property = parts[0];
+                    if (!ALLOWED_SORT_FIELDS.contains(property)) {
+                        throw new IllegalArgumentException("Unsupported sort field: " + property);
+                    }
+                    Sort.Direction direction = parts.length > 1
+                            ? Sort.Direction.fromOptionalString(parts[1].toLowerCase()).orElseThrow(
+                                    () -> new IllegalArgumentException("Sort direction must be asc or desc"))
+                            : Sort.Direction.ASC;
+                    return new Sort.Order(direction, property);
+                })
+                .toList();
     }
 
     @GetMapping("/{id}")
@@ -42,8 +87,7 @@ public class BookController {
 
     @PostMapping
     @Operation(summary = "Create a new book")
-    public ResponseEntity<ApiResponse<BookResponseDTO>> createBook(
-            @Valid @RequestBody BookRequestDTO request) {
+    public ResponseEntity<ApiResponse<BookResponseDTO>> createBook(@Valid @RequestBody BookRequestDTO request) {
         BookResponseDTO created = bookService.createBook(request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(created, "Book created successfully"));
@@ -52,8 +96,7 @@ public class BookController {
     @PutMapping("/{id}")
     @Operation(summary = "Update an existing book")
     public ResponseEntity<ApiResponse<BookResponseDTO>> updateBook(
-            @PathVariable Long id,
-            @Valid @RequestBody BookRequestDTO request) {
+            @PathVariable Long id, @Valid @RequestBody BookRequestDTO request) {
         return ResponseEntity.ok(ApiResponse.success(bookService.updateBook(id, request), "Book updated successfully"));
     }
 
@@ -66,23 +109,20 @@ public class BookController {
 
     @GetMapping("/search")
     @Operation(summary = "Search books by title, author or genre")
-    public ResponseEntity<ApiResponse<List<BookResponseDTO>>> searchBooks(
-            @RequestParam String query) {
+    public ResponseEntity<ApiResponse<List<BookResponseDTO>>> searchBooks(@RequestParam String query) {
         List<BookResponseDTO> results = bookService.searchBooks(query);
         return ResponseEntity.ok(ApiResponse.success(results, "Found " + results.size() + " results"));
     }
 
     @GetMapping("/author/{author}")
     @Operation(summary = "Get books by author")
-    public ResponseEntity<ApiResponse<List<BookResponseDTO>>> getByAuthor(
-            @PathVariable String author) {
+    public ResponseEntity<ApiResponse<List<BookResponseDTO>>> getByAuthor(@PathVariable String author) {
         return ResponseEntity.ok(ApiResponse.success(bookService.getBooksByAuthor(author), "Books by " + author));
     }
 
     @GetMapping("/genre/{genre}")
     @Operation(summary = "Get books by genre")
-    public ResponseEntity<ApiResponse<List<BookResponseDTO>>> getByGenre(
-            @PathVariable String genre) {
+    public ResponseEntity<ApiResponse<List<BookResponseDTO>>> getByGenre(@PathVariable String genre) {
         return ResponseEntity.ok(ApiResponse.success(bookService.getBooksByGenre(genre), "Books in genre: " + genre));
     }
 
@@ -94,8 +134,7 @@ public class BookController {
 
     @GetMapping("/rating")
     @Operation(summary = "Get books with minimum rating")
-    public ResponseEntity<ApiResponse<List<BookResponseDTO>>> getByMinRating(
-            @RequestParam Double minRating) {
+    public ResponseEntity<ApiResponse<List<BookResponseDTO>>> getByMinRating(@RequestParam Double minRating) {
         return ResponseEntity.ok(ApiResponse.success(bookService.getBooksByMinRating(minRating),
                 "Books with rating >= " + minRating));
     }

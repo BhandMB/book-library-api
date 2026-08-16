@@ -2,11 +2,13 @@ package com.bhandmb.booklibrary.service;
 
 import com.bhandmb.booklibrary.dto.BookRequestDTO;
 import com.bhandmb.booklibrary.dto.BookResponseDTO;
+import com.bhandmb.booklibrary.dto.PageResponse;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
 public interface BookService {
-    List<BookResponseDTO> getAllBooks();
+    PageResponse<BookResponseDTO> getAllBooks(Pageable pageable);
     BookResponseDTO getBookById(Long id);
     BookResponseDTO getBookByIsbn(String isbn);
     BookResponseDTO createBook(BookRequestDTO request);

@@ -16,6 +16,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -27,8 +28,6 @@ public class BookController {
 
     private static final Set<String> ALLOWED_SORT_FIELDS = Set.of(
             "id", "title", "author", "publishedYear", "genre", "rating", "createdAt", "updatedAt");
-    private static final int DEFAULT_PAGE = 0;
-    private static final int DEFAULT_SIZE = 10;
     private static final int MAX_SIZE = 100;
 
     private final BookService bookService;
@@ -41,7 +40,7 @@ public class BookController {
             @Parameter(description = "Number of books per page (1-100)")
             @RequestParam(defaultValue = "10") int size,
             @Parameter(description = "Sort field and direction, e.g. title,asc")
-            @RequestParam(defaultValue = "id,asc") String[] sort) {
+            @RequestParam(defaultValue = "id,asc") String sort) {
 
         if (page < 0) {
             throw new IllegalArgumentException("Page must be >= 0");
@@ -56,16 +55,16 @@ public class BookController {
         return ResponseEntity.ok(ApiResponse.success(books, "Fetched " + books.getContent().size() + " books"));
     }
 
-    private List<Sort.Order> parseSortOrders(String[] sort) {
-        return java.util.Arrays.stream(sort)
+    private List<Sort.Order> parseSortOrders(String sort) {
+        return Arrays.stream(sort.split(";"))
                 .map(value -> {
-                    String[] parts = value.split(",", 2);
-                    String property = parts[0];
+                    String[] parts = value.trim().split(",", 2);
+                    String property = parts[0].trim();
                     if (!ALLOWED_SORT_FIELDS.contains(property)) {
                         throw new IllegalArgumentException("Unsupported sort field: " + property);
                     }
                     Sort.Direction direction = parts.length > 1
-                            ? Sort.Direction.fromOptionalString(parts[1].toLowerCase()).orElseThrow(
+                            ? Sort.Direction.fromOptionalString(parts[1].trim().toLowerCase()).orElseThrow(
                                     () -> new IllegalArgumentException("Sort direction must be asc or desc"))
                             : Sort.Direction.ASC;
                     return new Sort.Order(direction, property);

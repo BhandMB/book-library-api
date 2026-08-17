@@ -33,5 +33,6 @@ public class BookRequestDTO {
     @Size(max = 1000)
     private String description;
 
+    @Builder.Default
     private Boolean available = true;
 }

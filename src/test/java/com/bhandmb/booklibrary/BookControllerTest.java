@@ -49,6 +49,13 @@ class BookControllerTest {
     }
 
     @Test @Order(4)
+    void getAllBooks_invalidSortDirection_returnsBadRequest() throws Exception {
+        mockMvc.perform(get("/api/v1/books?sort=title,sideways"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false));
+    }
+
+    @Test @Order(5)
     void createBook_validRequest_returnsCreated() throws Exception {
         BookRequestDTO dto = BookRequestDTO.builder()
                 .title("Test Book").author("Test Author")
@@ -62,7 +69,7 @@ class BookControllerTest {
                 .andExpect(jsonPath("$.data.title").value("Test Book"));
     }
 
-    @Test @Order(5)
+    @Test @Order(6)
     void createBook_duplicateIsbn_returnsConflict() throws Exception {
         BookRequestDTO dto = BookRequestDTO.builder()
                 .title("Duplicate").author("Author")
@@ -75,13 +82,13 @@ class BookControllerTest {
                 .andExpect(status().isConflict());
     }
 
-    @Test @Order(6)
+    @Test @Order(7)
     void getBookById_notFound_returns404() throws Exception {
         mockMvc.perform(get("/api/v1/books/9999"))
                 .andExpect(status().isNotFound());
     }
 
-    @Test @Order(7)
+    @Test @Order(8)
     void searchBooks_returnsResults() throws Exception {
         mockMvc.perform(get("/api/v1/books/search?query=clean"))
                 .andExpect(status().isOk())

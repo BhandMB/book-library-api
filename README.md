@@ -6,21 +6,22 @@
 
 A production-style RESTful API for managing a book library, built with **Java 17, Spring Boot 3.1.11, Spring Data JPA, Hibernate, H2, Jakarta Validation, and OpenAPI/Swagger**.
 
-The project demonstrates layered backend architecture, CRUD operations, search and filtering, pagination, validation, exception handling, API documentation, seed data, and automated testing with MockMvc.
+The project demonstrates layered backend architecture, CRUD operations, search and filtering, pagination, validation, exception handling, API documentation, seed data, and automated tests with MockMvc and Mockito.
 
 ## 🚀 Highlights
 
 - Full CRUD for books
-- Pagination and sorting
+- Pagination and sorting with allow-listed sort fields
 - Search by title, author, or genre
 - Filtering by author, genre, availability, and minimum rating
-- ISBN lookup
+- ISBN lookup with duplicate ISBN protection
 - Toggle book availability
 - Jakarta Bean Validation
 - Centralized exception handling
 - Swagger/OpenAPI documentation
 - H2 database with seed data
-- Unit and integration tests using MockMvc
+- Controller integration tests with MockMvc
+- Service unit tests with Mockito
 - Maven build and GitHub Actions CI
 
 ## 🏗️ Architecture
@@ -67,24 +68,25 @@ Cross-cutting: DTOs • Validation • Exception Handling • OpenAPI
 | Validation | Jakarta Bean Validation |
 | API Docs | SpringDoc OpenAPI / Swagger |
 | Build | Maven |
-| Testing | JUnit + MockMvc |
+| Testing | JUnit 5 + MockMvc + Mockito |
 | CI | GitHub Actions |
 
 ## 📁 Project Structure
 
 ```text
-src/main/java/
-└── .../booklibrary/
-    ├── controller/      # REST endpoints
-    ├── service/         # Business logic
-    ├── repository/      # Data access
-    ├── dto/             # API request/response models
-    ├── entity/          # JPA entities
-    ├── exception/       # Error handling
-    └── config/          # Configuration
+src/main/java/com/bhandmb/booklibrary/
+├── controller/      # REST endpoints
+├── service/         # Business logic
+├── repository/      # Data access
+├── dto/             # API request/response models
+├── model/           # JPA entities
+├── exception/       # Error handling
+├── DataSeeder.java  # Sample development data
+└── BookLibraryApiApplication.java
 
-src/test/
-└── ...                  # Unit and MockMvc integration tests
+src/test/java/com/bhandmb/booklibrary/
+├── BookControllerTest.java       # MockMvc integration tests
+└── BookServiceImplTest.java      # Mockito unit tests
 ```
 
 ## 📖 Complete API
@@ -122,7 +124,7 @@ Example:
 GET /api/v1/books?page=0&size=10&sort=title,asc
 ```
 
-Supported sort fields include `id`, `title`, `author`, `publishedYear`, `genre`, `rating`, `createdAt`, and `updatedAt`.
+Supported sort fields: `id`, `title`, `author`, `publishedYear`, `genre`, `rating`, `createdAt`, `updatedAt`.
 
 ### Create Book
 
@@ -198,9 +200,17 @@ The application starts on port `8080`.
 
 ## 🧪 Testing
 
-The project includes **unit and integration tests using MockMvc**. These tests exercise HTTP endpoints and application behavior without requiring a separately deployed server.
+The project has two complementary test layers.
 
-Run the test suite:
+### Controller / API integration tests
+
+`BookControllerTest` uses **Spring Boot + MockMvc** to exercise HTTP endpoints and verify status codes and JSON responses. It covers pagination, validation errors, sorting validation, creation, duplicate ISBN handling, 404 handling, and search.
+
+### Service unit tests
+
+`BookServiceImplTest` uses **JUnit 5 + Mockito** to test business logic in isolation, including missing books, duplicate ISBN protection, successful creation, and availability toggling.
+
+Run all tests:
 
 ```bash
 mvn test
@@ -216,6 +226,12 @@ mvn clean package
 
 GitHub Actions runs the Maven test suite automatically on pushes and pull requests. The workflow uses **JDK 17**, caches Maven dependencies, and fails when the build or tests fail.
 
+## 🔐 Configuration
+
+The default profile uses H2 for zero-setup development. An example MySQL profile can be used for a persistent database without committing credentials.
+
+Never commit real passwords, API keys, or other secrets to GitHub.
+
 ## 📌 What This Project Demonstrates
 
 - REST API design
@@ -226,9 +242,11 @@ GitHub Actions runs the Maven test suite automatically on pushes and pull reques
 - Validation and exception handling
 - Pagination and sorting
 - Automated API testing with MockMvc
+- Business-logic unit testing with Mockito
 - OpenAPI documentation
 - Maven builds
 - GitHub Actions CI
+- Secure configuration practices
 
 ## 📄 License
 

@@ -248,6 +248,18 @@ Never commit real passwords, API keys, or other secrets to GitHub.
 - GitHub Actions CI
 - Secure configuration practices
 
+## 🧭 API Verification Checklist
+
+Use this checklist when making backend changes:
+
+- [ ] Run `mvn test`
+- [ ] Verify CRUD endpoints
+- [ ] Verify validation and duplicate ISBN behavior
+- [ ] Verify pagination and allow-listed sorting
+- [ ] Verify search/filter endpoints
+- [ ] Verify Swagger/OpenAPI documentation
+- [ ] Confirm no credentials or secrets are committed
+
 ## 📄 License
 
 This project is licensed under the MIT License.

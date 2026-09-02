@@ -260,6 +260,19 @@ Use this checklist when making backend changes:
 - [ ] Verify Swagger/OpenAPI documentation
 - [ ] Confirm no credentials or secrets are committed
 
+## 🛡️ Backend Quality Checklist
+
+For each API change, review the following before merging:
+
+- [ ] Validate request payloads at the API boundary
+- [ ] Keep business rules inside the service layer
+- [ ] Return DTOs instead of exposing persistence entities
+- [ ] Handle missing resources with consistent error responses
+- [ ] Cover success and failure paths with automated tests
+- [ ] Keep sorting/filtering inputs constrained to supported fields
+- [ ] Update OpenAPI documentation when endpoints change
+- [ ] Run the full Maven test suite before pushing
+
 ## 📄 License
 
 This project is licensed under the MIT License.

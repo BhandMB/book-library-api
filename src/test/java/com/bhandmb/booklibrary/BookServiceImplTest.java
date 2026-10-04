@@ -73,6 +73,17 @@ class BookServiceImplTest {
     }
 
     @Test
+    void updateBook_duplicateIsbn_throwsConflict() {
+        Book existing = sampleBook();
+        BookRequestDTO request = request("9780134494167");
+        when(bookRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(bookRepository.existsByIsbn("9780134494167")).thenReturn(true);
+
+        assertThrows(DuplicateIsbnException.class, () -> bookService.updateBook(1L, request));
+        verify(bookRepository, never()).save(any(Book.class));
+    }
+
+    @Test
     void toggleAvailability_existingBook_flipsAvailability() {
         Book book = sampleBook();
         book.setAvailable(true);

@@ -1,0 +1,1 @@
+Book API: request validation contract
